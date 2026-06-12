@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>SEVERINO-LC – AutoVelox Pro & Mapa 3D Real</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet" />
+  
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+  <style>
+    :root {
+      --bg-deep: #06060c;
+      --card-bg: rgba(18, 18, 28, 0.92);
+      --border-subtle: rgba(255, 255, 255, 0.1);
+      --accent-red: #e0243f;
+      --accent-amber: #f5a623;
+      --accent-green: #00ff88;
+      --font-digital: 'Orbitron', 'Segoe UI', monospace;
+      --font-ui: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+      --text-painel: #00ff88;
+    }
+
+    body.light-mode {
+      --bg-deep: #f0f2f5;
+      --card-bg: rgba(240, 242, 245, 0.95);
+      --border-subtle: rgba(0, 0, 0, 0.15);
+      --text-painel: #007744;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: var(--font-ui);
+      background: radial-gradient(ellipse at 50% 20%, #0f0f1a 0%, #030308 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 6px 24px 6px;
+      overflow-x: hidden;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body.light-mode {
+      background: #f0f2f5 !important;
+    }
+    
+    /* ========== CABEÇALHO ========== */
+    .app-header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      margin-bottom: 12px;
+      background: rgba(22, 22, 34, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+    }
+
+    body.light-mode .app-header {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .header-top-row {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-digital);
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.6);
+      letter-spacing: 0.5px;
+    }
+
+    body.light-mode .app-logo {
+      color: #333333;
+    }
+    
+    .app-logo .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      box-shadow: 0 0 8px var(--accent-red);
+    }
+    
+    .digital-clock {
+      font-family: var(--font-digital);
+      font-size: 1.8rem;
+      color: #ffffff;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+      background: rgba(0, 0, 0, 0.5);
+      width: 100%;
+      text-align: center;
+      padding: 4px 0;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      margin-top: 2px;
+    }
+
+    body.light-mode .digital-clock {
+      color: #222222;
+      background: #e4e7eb;
+      text-shadow: none;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .app-badge {
+      background: rgba(0, 255, 136, 0.1);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.6rem;
+      letter-spacing: 1.5px;
+      color: var(--accent-green);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    body.light-mode .app-badge {
+      background: rgba(0, 119, 68, 0.1);
+      color: #007744;
+    }
+    
+    /* ========== HUD PRINCIPAL ========== */
+    .hud-container {
+      width: 100%;
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 14px 12px;
+      border-radius: 24px;
+      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .speed-stage {
+      width: 100%;
+      height: 44vh;
+      max-height: 500px;
+      min-height: 340px;
+      border-radius: 20px;
+      background: rgba(10, 10, 18, 0.85);
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 4px 24px rgba(0, 0, 0, 0.95);
+      margin-bottom: 12px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body.light-mode .speed-stage {
+      background: #ffffff;
+      border: 2px solid rgba(0, 0, 0, 0.08);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    #panel-digital {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      position: absolute;
+      padding: 10px 0;
+    }
+    
+    .speed-number-container {
+      width: 94% !important;
+      height: 100% !important;
+      flex: 1;
+      background: #000000 !important;
+      border: 1.5px solid #ffffff;
+      border-radius: 16px;
+      box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.1), 0 8px 25px rgba(0, 0, 0, 0.5);
+      margin-top: 2px;
+      margin-bottom: 6px;
+      padding: 0 !important;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body.light-mode .speed-number-container {
+      background: #f8f9fa !important;
+      border: 1.5px solid #cccccc;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .speed-svg-display {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+    
+    .speed-number-text {
+      font-family: var(--font-digital) !important;
+      font-weight: 500 !important;
+      fill: var(--text-painel);
+      letter-spacing: -3px;
+    }
+    
+    #panel-analog {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      position: absolute;
+    }
+    
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      margin-bottom: 50px;
+    }
+    
+    canvas {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 50%;
+    }
+    
+    .escondido {
+      display: none !important;
+    }
+    
+    /* ========== BARRA DE ROLAGEM (FITA) ========== */
+    .speed-tape-container {
+      width: 100%;
+      height: 52px;
+      background: linear-gradient(180deg, #f4f4f4 0%, #ffffff 20%, #ffffff 80%, #e0e0e0 100%);
+      border-top: 2px solid #ccc;
+      border-bottom: 2px solid #aaa;
+      box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.25), 0 6px 12px rgba(0, 0, 0, 0.4);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      margin-top: auto;
+      z-index: 3;
+    }
+    
+    #tape-analog {
+      position: absolute;
+      bottom: 10px;
+      width: 94%;
+      left: 3%;
+    }
+    
+    .speed-tape-container::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 100%;
+      height: 24px;
+      background: linear-gradient(180deg,
+          rgba(0, 180, 90, 0.3) 0%,
+          rgba(0, 255, 136, 0.5) 50%,
+          rgba(0, 180, 90, 0.3) 100%);
+      border-top: 2px solid rgba(0, 255, 136, 0.8);
+      border-bottom: 2px solid rgba(0, 150, 80, 0.7);
+      box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.5), 0 2px 6px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    .speed-tape-track {
+      display: flex;
+      position: absolute;
+      height: 100%;
+      align-items: center;
+      left: 50%;
+      margin-left: -30px;
+      transform: translateX(0px);
+      will-change: transform;
+      z-index: 2;
+    }
+    
+    .tape-mark {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 100%;
+      flex-shrink: 0;
+      position: relative;
+    }
+    
+    .tape-number {
+      font-family: var(--font-ui);
+      font-size: 1.15rem;
+      color: #222;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9), 0 -1px 0 rgba(0, 0, 0, 0.3);
+    }
+    
+    .tape-tick {
+      width: 2px;
+      height: 12px;
+      background: #333;
+      margin-top: 2px;
+    }
+    
+    .tape-minor-tick {
+      width: 2px;
+      height: 7px;
+      background: #666;
+      margin-top: 2px;
+    }
+    
+    .tape-minor-number {
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      color: #444;
+    }
+    
+    .tape-pointer {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 6px;
+      height: 100%;
+      background: linear-gradient(90deg, #b01020, #ff2a40, #b01020);
+      box-shadow: 0 0 14px rgba(255, 0, 0, 0.8);
+      transform: translateX(-50%);
+      z-index: 4;
+      border-radius: 3px;
+    }
+    
+    .progress-container {
+      width: 100%;
+      height: 6px;
+      background: #12121c;
+      border-radius: 20px;
+      margin: 0 0 10px;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4a90d9, #e0243f);
+      border-radius: 20px;
+    }
+    
+    .gps-warning {
+      text-align: center;
+      color: var(--accent-amber);
+      font-size: 0.75rem;
+      margin-bottom: 8px;
+      display: none;
+      font-weight: 500;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin: 2px 0 12px;
+      width: 100%;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 10px 2px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    body.light-mode .card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .card span {
+      display: block;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #ffffff;
+      margin-top: 4px;
+      font-family: var(--font-digital);
+      letter-spacing: 0.5px;
+    }
+
+    body.light-mode .card span {
+      color: #222222;
+    }
+    
+    .card label {
+      font-size: 0.58rem;
+      letter-spacing: 1.5px;
+      color: #888;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    
+    .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 4px auto 0;
+      padding: 0;
+    }
+
+    body.light-mode .theme-toggle-btn {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      color: #333;
+    }
+    
+    .caixa-botoes-rodape {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 4px !important;
+      margin-top: 4px !important;
+      z-index: 5;
+    }
+    
+    .btn-rodape-acao {
+      flex: 1 !important;
+      width: 33% !important;
+      padding: 16px 4px !important;
+      border-radius: 40px !important;
+      font-family: var(--font-digital) !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 1px !important;
+      font-size: 0.65rem !important;
+      cursor: pointer !important;
+      text-align: center !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .btn-rodape-vermelho {
+      background: #c91a30 !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+    
+    .btn-rodape-escuro {
+      background: #14141a !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+
+    body.light-mode .btn-rodape-escuro {
+      background: #d4d7dc !important;
+      color: #222222 !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* ========== DESIGN DO MAPA WAZE 3D REAL TELA CHEIA ========== */
+    #tela-mapa {
+      position: absolute !important; 
+      top: 0 !important; 
+      left: 0 !important; 
+      width: 100% !important; 
+      height: 100% !important; 
+      background: #0f0f1a !important; 
+      z-index: 9999 !important; /* Força sobreposição absoluta */
+      display: none; 
+      flex-direction: column !important;
+      overflow: hidden !important;
+      border-radius: 0px !important;
+    }
+
+    #painel-superior-mapa {
+      background: rgba(20, 20, 30, 0.95) !important;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+      padding: 10px 14px !important;
+      color: #fff !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      z-index: 120 !important;
+    }
+
+    #texto-endereco {
+      color: #00ff88 !important;
+      font-size: 0.85rem !important;
+      font-weight: 500 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 50% !important;
+    }
+
+    .caixa-botoes-topo-mapa {
+      display: flex !important;
+      gap: 6px !important;
+      align-items: center !important;
+    }
+
+    .btn-salvar {
+      background: #f5a623 !important;
+      color: #000 !important;
+      border: none !important;
+      padding: 8px 14px !important;
+      border-radius: 20px !important;
+      font-weight: 700 !important;
+      font-size: 0.75rem !important;
+      cursor: pointer !important;
+      text-transform: uppercase !important;
+    }
+
+    .btn-voltar-mapa {
+      padding: 8px 16px !important; 
+      background: #c91a30 !important; 
+      color: #fff !important; 
+      border: none !important; 
+      border-radius: 20px !important; 
+      font-weight: bold !important; 
+      cursor: pointer !important;
+    }
+
+    #meu-mapa-container {
+      width: 100% !important;
+      flex: 1 !important;
+      position: relative !important;
+      z-index: 1 !important;
+      border-radius: 0px !important;
+      overflow: hidden !important;
+    }
+
+    #mapa {
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 0px !important;
+    }
+
+    /* 🔥 ANTI-CIRCULO: Forçar retângulos nas estruturas canvas injetadas dinamicamente */
+    .maplibregl-canvas-container, 
+    .maplibregl-canvas, 
+    #mapa canvas,
+    #mapa div {
+      border-radius: 0px !important;
+      clip-path: none !important;
+    }
+
+    /* Elemento customizado do marcador de seta da rota */
+    .marcador-navegacao {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .seta-waze-3d {
+      width: 0 !important;
+      height: 0 !important;
+      border-left: 10px solid transparent !important;
+      border-right: 10px solid transparent !important;
+      border-bottom: 26px solid #e0243f !important;
+      filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.6)) !important;
+      transform-origin: center 70% !important;
+      transition: transform 0.2s ease !important;
+    }
+
+    .btn-satelite {
+      position: absolute !important;
+      top: 15px !important;
+      right: 10px !important;
+      z-index: 105 !important;
+      background: rgba(20, 20, 30, 0.9) !important;
+      color: #fff !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+      padding: 10px 12px !important;
+      border-radius: 12px !important;
+      font-size: 0.75rem !important;
+      font-weight: bold !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+    }
+
+    #btn-recentralizar {
+      position: absolute !important; 
+      bottom: 30px !important; 
+      left: 20px !important; 
+      z-index: 105 !important; 
+      background: #e0243f !important; 
+      color: #fff !important; 
+      border: 1px solid rgba(255,255,255,0.3) !important; 
+      padding: 12px !important; 
+      border-radius: 50% !important; 
+      width: 52px !important; 
+      height: 52px !important; 
+      font-size: 20px !important; 
+      font-weight: bold !important; 
+      cursor: pointer !important; 
+      display: flex !important; 
+      align-items: center !important; 
+      justify-content: center !important; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; 
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-header">
+    <div class="header-top-row">
+      <div class="app-logo">
+        <span class="dot"></span>SEVERINO-LC
+      </div>
+      <div class="app-badge">PRO</div>
+    </div>
+    <div class="digital-clock" id="topClock">00:00:00</div>
+  </div>
+  
+  <div class="hud-container">
+    <div class="speed-stage" id="speedStage">
+      <div id="panel-digital">
+        <div class="speed-number-container">
+          <svg class="speed-svg-display" viewBox="0 0 100 55" preserveAspectRatio="none">
+            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="52" class="speed-number-text" id="speed-val">00</text>
+          </svg>
+        </div>
+        <div class="speed-tape-container" id="tape-digital">
+          <div class="tape-pointer"></div>
+          <div class="speed-tape-track" id="tape-track-digital"></div>
+        </div>
+      </div>
+      <div id="panel-analog" class="escondido">
+        <div class="canvas-container">
+          <canvas id="gaugeCanvas" width="500" height="500" aria-label="Velocímetro analógico"></canvas>
+        </div>
+        <div class="speed-tape-container" id="tape-analog">
+          <div class="tape-pointer"></div>
+          <div class="speed-tape-track" id="tape-track-analog"></div>
+        </div>
+      </div>
+    </div>
+    <div class="gps-warning" id="gpsWarning">🔍 Buscando sinal GPS...</div>
+    <div class="progress-container">
+      <div class="progress-bar" id="p-bar"></div>
+    </div>
+    <div class="grid">
+      <div class="card"><label>Distância</label><span id="dist-val">0.00 km</span></div>
+      <div class="card"><label>Média</label><span id="avg-val">0.0</span></div>
+      <div class="card" style="flex-direction: row; align-items: center; justify-content: center; gap: 8px; padding: 8px 4px;">
+        <div style="text-align: center;">
+          <label>Rumo</label>
+          <span id="dir-val">-</span>
+        </div>
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Alternar tema">🌙</button>
+      </div>
+    </div>
+    <div class="caixa-botoes-rodape">
+      <button class="btn-rodape-acao btn-rodape-vermelho" onclick="window.zerarHodometro()">Zerar Dist.</button>
+      <button class="btn-rodape-acao btn-rodape-escuro" onclick="switchPanel()">Painel</button>
+      <button class="btn-rodape-acao btn-rodape-escuro" onclick="abrirMapa()" style="background:#007744 !important; color:#fff !important;">Ver Mapa</button>
+    </div>
+  </div>
+
+  <div id="tela-mapa">
+    <div id="painel-superior-mapa">
+      <span id="texto-endereco">📍 Buscando localização...</span>
+      <div class="caixa-botoes-topo-mapa">
+        <button class="btn-salvar" onclick="salvarRotaAtual()">💾 Salvar Rota</button>
+        <button class="btn-voltar-mapa" onclick="fecharMapa()">Voltar</button>
+      </div>
+    </div>
+    <div id="meu-mapa-container">
+      <button class="btn-satelite" onclick="alternarCamadaMapa()">🚀 <span id="txt-btn-satelite">Modo Satélite</span></button>
+      <button id="btn-recentralizar" onclick="recentralizarMapaManual()">🎯</button>
+      <div id="mapa"></div>
+    </div>
+  </div>
+
+<script>
+    (function() {
+      let currentMode = "digital";
+      let totalDistance = parseFloat(localStorage.getItem('severino_distancia')) || 0;
+      let lastCoord = null;
+      let gpsErrorCount = 0;
+      let lastUpdateTime = Date.now();
+      window.velocidadeAlvoGPS = 0;
+      let velocidadeSuaveExibida = 0;
+      let totalSomaVelocidades = 0;
+      window.isLightMode = false;
+      let rumoAtualVeiculo = 0;
+      
+      let mapaObjeto = null;
+      let mapaEmModoSatelite = false;
+      let marcadorUsuario = null;
+      let elementoSetaDom = null;
+      let historicoCoordenadas = []; 
+      let mapaBloqueadoAoCarro = true;
+
+      const speedVal = document.getElementById('speed-val');
+      const pBar = document.getElementById('p-bar');
+      const distVal = document.getElementById('dist-val');
+      const avgVal = document.getElementById('avg-val');
+      const dirVal = document.getElementById('dir-val');
+      const canvas = document.getElementById('gaugeCanvas');
+      const ctx = canvas.getContext('2d');
+      const gpsWarning = document.getElementById('gpsWarning');
+      const panelDigital = document.getElementById('panel-digital');
+      const panelAnalog = document.getElementById('panel-analog');
+      const speedStage = document.getElementById('speedStage');
+      const topClock = document.getElementById('topClock');
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const tapeTrackDigital = document.getElementById('tape-track-digital');
+      const tapeTrackAnalog = document.getElementById('tape-track-analog');
+      const tapeMarkWidth = 60;
+      
+      if (distVal) distVal.innerText = (totalDistance / 1000).toFixed(2) + " km";
+      
+      themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-mode');
+        window.isLightMode = document.body.classList.contains('light-mode');
+        themeToggleBtn.textContent = window.isLightMode ? '☀️' : '🌙';
+        atualizarEstiloMapa3D();
+      });
+      
+      function updateClock() {
+        const now = new Date();
+        topClock.innerText = String(now.getHours()).padStart(2, '0') + ':' +
+          String(now.getMinutes()).padStart(2, '0') + ':' +
+          String(now.getSeconds()).padStart(2, '0');
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+      
+      function generateSpeedTape(trackElement) {
+        if (!trackElement) return;
+        trackElement.innerHTML = '';
+        const maxSpeed = 200;
+        for (let i = 0; i <= maxSpeed; i += 10) {
+          const mark = document.createElement('div');
+          mark.className = 'tape-mark';
+          mark.innerHTML = `<div class="tape-number">${i}</div> <div class="tape-tick"></div>`;
+          trackElement.appendChild(mark);
+          if (i < maxSpeed) {
+            const minorMark = document.createElement('div');
+            minorMark.className = 'tape-mark';
+            minorMark.innerHTML = `<div class="tape-minor-number">${i + 5}</div> <div class="tape-minor-tick"></div>`;
+            trackElement.appendChild(minorMark);
+          }
+        }
+      }
+      generateSpeedTape(tapeTrackDigital);
+      generateSpeedTape(tapeTrackAnalog);
+      
+      function inicializarMapeamentoOriginal() {
+        if (mapaObjeto) return;
+
+        const estiloEscuro = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
+        mapaObjeto = new maplibregl.Map({
+            container: 'mapa',
+            style: estiloEscuro,
+            center: lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614],
+            zoom: 16.5,
+            pitch: 60, 
+            bearing: 0,
+            attributionControl: false
+        });
+
+        mapaObjeto.on('load', () => {
+            if (mapaObjeto.getLayer('building')) {
+                mapaObjeto.setPaintProperty('building', 'fill-extrusion-height', [
+                    'interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']
+                ]);
+            }
+            
+            mapaObjeto.addSource('trajeto-linha', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': { 'type': 'LineString', 'coordinates': [] }
+                }
+            });
+
+            mapaObjeto.addLayer({
+                'id': 'trajeto-camada',
+                'type': 'line',
+                'source': 'trajeto-linha',
+                'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                'paint': { 'line-color': '#00ff88', 'line-width': 6, 'line-opacity': 0.85 }
+            });
+        });
+
+        mapaObjeto.on('dragstart', function() {
+            mapaBloqueadoAoCarro = false;
+            const btn = document.getElementById('btn-recentralizar');
+            if (btn) btn.style.background = '#f5a623';
+        });
+      }
+
+      function atualizarEstiloMapa3D() {
+        if (!mapaObjeto) return;
+        if (mapaEmModoSatelite) return;
+        const estilo = window.isLightMode ? 
+            'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json' : 
+            'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+        mapaObjeto.setStyle(estilo);
+      }
+      
+      window.recentralizarMapaManual = function() {
+          mapaBloqueadoAoCarro = true;
+          const btn = document.getElementById('btn-recentralizar');
+          if (btn) btn.style.background = '#e0243f'; 
+          if (lastCoord && mapaObjeto) {
+              mapaObjeto.flyTo({
+                  center: [lastCoord.lon, lastCoord.lat],
+                  zoom: 17,
+                  pitch: 60,
+                  bearing: rumoAtualVeiculo,
+                  essential: true
+              });
+          }
+      };
+
+      window.alternarCamadaMapa = function() {
+          if (!mapaObjeto) return;
+          if (mapaEmModoSatelite) {
+              atualizarEstiloMapa3D();
+              document.getElementById('txt-btn-satelite').innerText = "Modo Satélite";
+              mapaEmModoSatelite = false;
+          } else {
+              mapaObjeto.setStyle({
+                  'version': 8,
+                  'sources': {
+                      'raster-tiles': {
+                          'type': 'raster',
+                          'tiles': ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                          'tileSize': 256
+                      }
+                  },
+                  'layers': [{ 'id': 'simple-tiles', 'type': 'raster', 'source': 'raster-tiles', 'minzoom': 0, 'maxzoom': 20 }]
+              });
+              document.getElementById('txt-btn-satelite').innerText = "Modo Ruas";
+              mapaEmModoSatelite = true;
+          }
+      };
+
+      async function buscarEndereco(lat, lon) {
+          try {
+              const resposta = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
+              const dados = await resposta.json();
+              if (dados && dados.display_name) {
+                  document.getElementById('texto-endereco').innerText = "📍 " + dados.display_name.split(',').slice(0, 3).join(',');
+              }
+          } catch (erro) {
+              document.getElementById('texto-endereco').innerText = "📍 Endereço indisponível";
+          }
+      }
+
+      window.salvarRotaAtual = function() {
+          if (historicoCoordenadas.length < 2) {
+              alert("🚗 Nenhuma movimentação registrada para salvar uma rota ainda!");
+              return;
+          }
+          const dadosDaRota = {
+              data: new Date().toLocaleString('pt-BR'),
+              pontos: historicoCoordenadas
+          };
+          let rotasSalvas = JSON.parse(localStorage.getItem('severino_rotas_salvas')) || [];
+          rotasSalvas.push(dadosDaRota);
+          localStorage.setItem('severino_rotas_salvas', JSON.stringify(rotasSalvas));
+          alert(`✅ Sucesso! Rota de ${historicoCoordenadas.length} pontos guardada.`);
+      };
+
+      window.atualizarVelocidade = function(velocidadeKmh, lat, lon, bearing) {
+        if (gpsWarning.style.display !== 'none') gpsWarning.style.display = 'none';
+        gpsErrorCount = 0;
+        lastUpdateTime = Date.now();
+        
+        window.velocidadeAlvoGPS = velocidadeKmh > 1.5 ? velocidadeKmh : 0;
+        if (window.velocidadeAlvoGPS > 0) {
+          totalSomaVelocidades += window.velocidadeAlvoGPS;
+          if (!window.totalLeiturasGpsContador) window.totalLeiturasGpsContador = 0;
+          window.totalLeiturasGpsContador++;
+          if (avgVal) {
+            avgVal.innerText = (totalSomaVelocidades / window.totalLeiturasGpsContador).toFixed(1);
+          }
+        }
+        
+        if (lat && lon) {
+          if (window.velocidadeAlvoGPS < 4.0 && lastCoord !== null && marcadorUsuario !== null) {
+              if (distVal) distVal.innerText = (totalDistance / 1000).toFixed(2) + " km";
+              return; 
+          }
+
+          if (lastCoord !== null && window.velocidadeAlvoGPS > 3) {
+              let dLon = (lon - lastCoord.lon) * Math.PI / 180;
+              let lat1 = lastCoord.lat * Math.PI / 180;
+              let lat2 = lat * Math.PI / 180;
+              let y = Math.sin(dLon) * Math.cos(lat2);
+              let x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+              let brng = Math.atan2(y, x) * 180 / Math.PI;
+              rumoAtualVeiculo = (brng + 360) % 360; 
+          } else if (bearing !== undefined && bearing !== null && bearing !== 0 && !isNaN(bearing)) {
+              rumoAtualVeiculo = parseFloat(bearing);
+          }
+
+          const novoPontoJson = [lon, lat];
+          
+          if (lastCoord && window.velocidadeAlvoGPS > 2.0) {
+            let d = haversine(lastCoord.lat, lastCoord.lon, lat, lon);
+            if (d > 0 && d < 500) {
+              totalDistance += d;
+              localStorage.setItem('severino_distancia', totalDistance.toString());
+            }
+          }
+          
+          lastCoord = { lat, lon };
+          historicoCoordenadas.push(novoPontoJson);
+          
+          if (mapaObjeto) {
+            const fonteLinha = mapaObjeto.getSource('trajeto-linha');
+            if (fonteLinha) {
+                fonteLinha.setData({
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': { 'type': 'LineString', 'coordinates': historicoCoordenadas }
+                });
+            }
+
+            if (!marcadorUsuario) {
+                const el = document.createElement('div');
+                el.className = 'marcador-navegacao';
+                el.innerHTML = '<div class="seta-waze-3d" id="seta-3d-id"></div>';
+                elementoSetaDom = el.querySelector('#seta-3d-id');
+                
+                marcadorUsuario = new maplibregl.Marker({ element: el })
+                    .setLngLat(novoPontoJson)
+                    .addTo(mapaObjeto);
+            } else {
+                marcadorUsuario.setLngLat(novoPontoJson);
+            }
+
+            if (elementoSetaDom) {
+                elementoSetaDom.style.transform = `rotate(${rumoAtualVeiculo}deg)`;
+            }
+
+            if (mapaBloqueadoAoCarro) {
+                mapaObjeto.easeTo({
+                    center: novoPontoJson,
+                    bearing: rumoAtualVeiculo, 
+                    pitch: 60,
+                    duration: 300
+                });
+            }
+            
+            buscarEndereco(lat, lon);
+          }
+        } else if (window.velocidadeAlvoGPS > 0) {
+          totalDistance += (window.velocidadeAlvoGPS / 3.6);
+          localStorage.setItem('severino_distancia', totalDistance.toString());
+        }
+        
+        if (distVal) distVal.innerText = (totalDistance / 1000).toFixed(2) + " km";
+        if (dirVal && rumoAtualVeiculo !== undefined) dirVal.innerText = getCardinals(rumoAtualVeiculo);
+      };
+      
+      window.zerarHodometro = function() {
+        totalDistance = 0;
+        totalSomaVelocidades = 0;
+        window.totalLeiturasGpsContador = 0;
+        historicoCoordenadas = [];
+        if (mapaObjeto && mapaObjeto.getSource('trajeto-linha')) {
+            mapaObjeto.getSource('trajeto-linha').setData({
+                'type': 'Feature',
+                'properties': {},
+                'geometry': { 'type': 'LineString', 'coordinates': [] }
+            });
+        }
+        localStorage.setItem('severino_distancia', '0');
+        if (distVal) distVal.innerText = "0.00 km";
+        if (avgVal) avgVal.innerText = "0.0";
+      };
+      
+      window.switchPanel = function() {
+        if (currentMode === "digital") {
+          panelDigital.classList.add('escondido');
+          panelAnalog.classList.remove('escondido');
+          currentMode = "analog";
+          setTimeout(() => { resizeCanvas(); }, 40);
+        } else {
+          panelDigital.classList.remove('escondido');
+          panelAnalog.classList.add('escondido');
+          currentMode = "digital";
+        }
+      };
+      
+      window.abrirMapa = function() {
+        const telaMapa = document.getElementById('tela-mapa');
+        telaMapa.style.display = 'flex';
+        
+        setTimeout(function() {
+            inicializarMapeamentoOriginal();
+            if (mapaObjeto) {
+                mapaObjeto.resize(); 
+                if (lastCoord) {
+                    mapaObjeto.jumpTo({
+                        center: [lastCoord.lon, lastCoord.lat],
+                        pitch: 60,
+                        bearing: rumoAtualVeiculo
+                    });
+                }
+            }
+        }, 200); 
+      };
+      
+      window.fecharMapa = function() {
+        const telaMapa = document.getElementById('tela-mapa');
+        telaMapa.style.display = 'none';
+        lastUpdateTime = Date.now();
+      };
+      
+      function resizeCanvas() {
+        if (!canvas || !speedStage) return;
+        const rect = canvas.parentNode.getBoundingClientRect();
+        const size = Math.min(rect.width, rect.height) * 0.99;
+        canvas.width = size;
+        canvas.height = size;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      
+      function renderizarCicloSuave() {
+        const agora = Date.now();
+        const tempoSemGps = agora - lastUpdateTime;
+        if (tempoSemGps > 1200) {
+          window.velocidadeAlvoGPS = Math.max(0, window.velocidadeAlvoGPS - 5);
+        }
+        const diferenca = window.velocidadeAlvoGPS - velocidadeSuaveExibida;
+        const absDiferenca = Math.abs(diferenca);
+        let fatorSuavizacao = diferenca > 0 ? 0.98 : 0.60;
+        if (absDiferenca > 15) {
+          fatorSuavizacao = 0.99;
+        } else if (absDiferenca < 1 && window.velocidadeAlvoGPS === 0) {
+          fatorSuavizacao = 1.0;
+        }
+        velocidadeSuaveExibida += diferenca * fatorSuavizacao;
+        if (Math.abs(velocidadeSuaveExibida) < 0.1) velocidadeSuaveExibida = 0;
+        const valorArredondado = Math.round(window.velocidadeAlvoGPS);
+        if (speedVal) {
+          speedVal.textContent = valorArredondado.toString().padStart(2, '0');
+          if (valorArredondado >= 100) {
+            speedVal.setAttribute("font-size", "42");
+          } else {
+            speedVal.setAttribute("font-size", "52");
+          }
+        }
+        drawGauge(velocidadeSuaveExibida);
+        
+        const tapeDeslocamento = (velocidadeSuaveExibida / 5) * tapeMarkWidth;
+        if (tapeTrackDigital) tapeTrackDigital.style.transform = `translateX(${-tapeDeslocamento}px)`;
+        if (tapeTrackAnalog) tapeTrackAnalog.style.transform = `translateX(${-tapeDeslocamento}px)`;
+        
+        const pct = Math.min((velocidadeSuaveExibida / 200) * 100, 100);
+        if (pBar) pBar.style.width = pct + "%";
+        requestAnimationFrame(renderizarCicloSuave);
+      }
+      
+      function haversine(lat1, lon1, lat2, lon2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+      
+      function getCardinals(deg) {
+        if (deg === null || isNaN(deg)) return "-";
+        const sectors = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+        return sectors[Math.round(deg / 45) % 8];
+      }
+      
+      function drawGauge(speed) {
+        if (!canvas || !ctx) return;
+        const w = canvas.width;
+        const w_h = canvas.height;
+        const cx = w / 2;
+        const cy = w_h / 2;
+        const radius = Math.min(w, w_h) * 0.46;
+        const light = window.isLightMode;
+        
+        const bgColor = light ? '#ffffff' : '#0a0a12';
+        const outerRingColor = light ? '#cccccc' : '#00ff88';
+        const arcBaseColor = light ? '#e4e7eb' : '#ffffff';
+        const arcProgressStart = '#c91a30';
+        const arcProgressEnd = '#ff3b50';
+        const tickMajorColor = light ? '#222222' : '#ffffff';
+        const tickMinorColor = light ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.4)';
+        const numberColor = light ? '#007744' : '#00ff88';
+        const needleColor = '#ff3b50';
+        const centerDotStroke = light ? '#222222' : '#ffffff';
+        const odoTextColor = light ? '#b37400' : '#f5a623';
+        const speedTextColor = light ? '#007744' : '#00ff88';
+        const infoBoxBg = light ? '#f8f9fa' : 'rgba(0,0,0,0.92)';
+
+        ctx.clearRect(0, 0, w, w_h);
+        ctx.fillStyle = bgColor;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + 14, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + 14, 0, Math.PI * 2);
+        ctx.strokeStyle = outerRingColor;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        
+        const startAngle = Math.PI * 0.78;
+        const endAngleTotal = Math.PI * 2.22;
+        const maxSpeed = 200;
+        const clampedSpeed = Math.min(speed, maxSpeed);
+        const progressAngle = startAngle + (clampedSpeed / maxSpeed) * (endAngleTotal - startAngle);
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, startAngle, endAngleTotal);
+        ctx.strokeStyle = arcBaseColor;
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        const arcGrad = ctx.createLinearGradient(0, 0, w, 0);
+        arcGrad.addColorStop(0, arcProgressStart);
+        arcGrad.addColorStop(1, arcProgressEnd);
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, startAngle, progressAngle);
+        ctx.strokeStyle = arcGrad;
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        for (let i = 0; i <= maxSpeed; i += 5) {
+          const angle = startAngle + (i / maxSpeed) * (endAngleTotal - startAngle);
+          const isMajor = i % 20 === 0;
+          const tickLength = isMajor ? 14 : 8;
+          const innerRadius = radius - 6;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(angle) * innerRadius, cy + Math.sin(angle) * innerRadius);
+          ctx.lineTo(cx + Math.cos(angle) * (innerRadius - tickLength), cy + Math.sin(angle) * (innerRadius - tickLength));
+          ctx.strokeStyle = isMajor ? tickMajorColor : tickMinorColor;
+          ctx.lineWidth = isMajor ? 3 : 1;
+          ctx.stroke();
+        }
+        
+        ctx.font = `bold ${Math.floor(radius * 0.13)}px 'Orbitron', sans-serif`;
+        ctx.fillStyle = numberColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i <= maxSpeed; i += 20) {
+          const angle = startAngle + (i / maxSpeed) * (endAngleTotal - startAngle);
+          const numX = cx + Math.cos(angle) * (radius - 32);
+          const numY = cy + Math.sin(angle) * (radius - 32);
+          ctx.fillText(i.toString(), numX, numY);
+        }
+        
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(progressAngle + Math.PI / 2);
+        ctx.beginPath();
+        ctx.moveTo(-5, 0);
+        ctx.lineTo(0, -radius + 15);
+        ctx.lineTo(5, 0);
+        ctx.closePath();
+        ctx.fillStyle = needleColor;
+        ctx.fill();
+        ctx.restore();
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+        ctx.fillStyle = bgColor;
+        ctx.fill();
+        ctx.strokeStyle = centerDotStroke;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        const dW = radius * 0.88;
+        const dH = radius * 0.38;
+        const dX = cx - dW / 2;
+        const dY = cy + radius * 0.38;
+        ctx.fillStyle = infoBoxBg;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(dX, dY, dW, dH, 8);
+        else ctx.rect(dX, dY, dW, dH);
+        ctx.fill();
+        
+        ctx.font = `bold ${Math.floor(dH * 0.36)}px 'Orbitron', monospace`;
+        ctx.fillStyle = odoTextColor;
+        ctx.fillText(`ODO: ${(totalDistance/1000).toFixed(1)} km`, cx, dY + dH * 0.32);
+        ctx.font = `bold ${Math.floor(dH * 0.52)}px 'Orbitron', monospace`;
+        ctx.fillStyle = speedTextColor;
+        ctx.fillText(`${Math.round(speed)} km/h`, cx, dY + dH * 0.76);
+      }
+      
+      resizeCanvas();
+      renderizarCicloSuave();
+    })();
+  </script>
+</body>
+
+</html>
