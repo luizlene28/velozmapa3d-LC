@@ -518,7 +518,7 @@
       border: 1px solid rgba(0, 0, 0, 0.1) !important;
     }
 
-    /* ========== DESIGN DO MAPA WAZE 3D REAL TELA CHEIA ========== */
+    /* ========== DESIGN DO MAPA TELA CHEIA ========== */
     #tela-mapa {
       position: absolute !important; 
       top: 0 !important; 
@@ -526,7 +526,7 @@
       width: 100% !important; 
       height: 100% !important; 
       background: #0f0f1a !important; 
-      z-index: 9999 !important; /* Força sobreposição absoluta */
+      z-index: 9999 !important;
       display: none; 
       flex-direction: column !important;
       overflow: hidden !important;
@@ -597,7 +597,6 @@
       border-radius: 0px !important;
     }
 
-    /* 🔥 ANTI-CIRCULO: Forçar retângulos nas estruturas canvas injetadas dinamicamente */
     .maplibregl-canvas-container, 
     .maplibregl-canvas, 
     #mapa canvas,
@@ -606,7 +605,6 @@
       clip-path: none !important;
     }
 
-    /* Elemento customizado do marcador de seta da rota */
     .marcador-navegacao {
       display: flex !important;
       align-items: center !important;
@@ -814,18 +812,17 @@
       generateSpeedTape(tapeTrackDigital);
       generateSpeedTape(tapeTrackAnalog);
       
+      // 🔥 FUNÇÃO DO MAPA CORRIGIDA (Ordem das Coordenadas e Estilo de Ruas Ativados)
       function inicializarMapeamentoOriginal() {
         if (mapaObjeto) return;
 
-        const estiloEscuro = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-
         mapaObjeto = new maplibregl.Map({
             container: 'mapa',
-            style: estiloEscuro,
-            center: lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614],
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', // Estilo colorido estável com ruas e texto
+            center: lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614], // [Longitude, Latitude] correta para o Brasil
             zoom: 16.5,
-            pitch: 60, 
-            bearing: 0,
+            pitch: 60, // Inclinação 3D estável
+            bearing: rumoAtualVeiculo,
             attributionControl: false
         });
 
