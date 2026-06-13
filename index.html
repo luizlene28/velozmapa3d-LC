@@ -989,22 +989,22 @@
         
         if (lat && lon) {
           if (window.velocidadeAlvoGPS < 4.0 && lastCoord !== null && marcadorUsuario !== null) {
-              if (distVal) distVal.innerText = (totalDistance / 1000).toFixed(2) + " km";
-              return; 
+            if (distVal) distVal.innerText = (totalDistance / 1000).toFixed(2) + " km";
+            return;
           }
-
+          
           if (lastCoord !== null && window.velocidadeAlvoGPS > 3) {
-              let dLon = (lon - lastCoord.lon) * Math.PI / 180;
-              let lat1 = lastCoord.lat * Math.PI / 180;
-              let lat2 = lat * Math.PI / 180;
-              let y = Math.sin(dLon) * Math.cos(lat2);
-              let x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-              let brng = Math.atan2(y, x) * 180 / Math.PI;
-              rumoAtualVeiculo = (brng + 360) % 360; 
+            let dLon = (lon - lastCoord.lon) * Math.PI / 180;
+            let lat1 = lastCoord.lat * Math.PI / 180;
+            let lat2 = lat * Math.PI / 180;
+            let y = Math.sin(dLon) * Math.cos(lat2);
+            let x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+            let brng = Math.atan2(y, x) * 180 / Math.PI;
+            rumoAtualVeiculo = (brng + 360) % 360;
           } else if (bearing !== undefined && bearing !== null && bearing !== 0 && !isNaN(bearing)) {
-              rumoAtualVeiculo = parseFloat(bearing);
+            rumoAtualVeiculo = parseFloat(bearing);
           }
-
+          
           const novoPontoJson = [lon, lat];
           
           if (lastCoord && window.velocidadeAlvoGPS > 2.0) {
@@ -1021,37 +1021,37 @@
           if (mapaObjeto) {
             const fonteLinha = mapaObjeto.getSource('trajeto-linha');
             if (fonteLinha) {
-                fonteLinha.setData({
-                    'type': 'Feature',
-                    'properties': {},
-                    'geometry': { 'type': 'LineString', 'coordinates': historicoCoordenadas }
-                });
+              fonteLinha.setData({
+                'type': 'Feature',
+                'properties': {},
+                'geometry': { 'type': 'LineString', 'coordinates': historicoCoordenadas }
+              });
             }
-
+            
             if (!marcadorUsuario) {
-                const el = document.createElement('div');
-                el.className = 'marcador-navegacao';
-                el.innerHTML = '<div class="seta-waze-3d" id="seta-3d-id"></div>';
-                elementoSetaDom = el.querySelector('#seta-3d-id');
-                
-                marcadorUsuario = new maplibregl.Marker({ element: el })
-                    .setLngLat(novoPontoJson)
-                    .addTo(mapaObjeto);
+              const el = document.createElement('div');
+              el.className = 'marcador-navegacao';
+              el.innerHTML = '<div class="seta-waze-3d" id="seta-3d-id"></div>';
+              elementoSetaDom = el.querySelector('#seta-3d-id');
+              
+              marcadorUsuario = new maplibregl.Marker({ element: el })
+                .setLngLat(novoPontoJson)
+                .addTo(mapaObjeto);
             } else {
-                marcadorUsuario.setLngLat(novoPontoJson);
+              marcadorUsuario.setLngLat(novoPontoJson);
             }
-
+            
             if (elementoSetaDom) {
-                elementoSetaDom.style.transform = `rotate(${rumoAtualVeiculo}deg)`;
+              elementoSetaDom.style.transform = `rotate(${rumoAtualVeiculo}deg)`;
             }
-
+            
             if (mapaBloqueadoAoCarro) {
-                mapaObjeto.easeTo({
-                    center: novoPontoJson,
-                    bearing: rumoAtualVeiculo, 
-                    pitch: 60,
-                    duration: 300
-                });
+              mapaObjeto.easeTo({
+                center: novoPontoJson,
+                bearing: rumoAtualVeiculo,
+                pitch: 60,
+                duration: 300
+              });
             }
             
             buscarEndereco(lat, lon);
@@ -1071,11 +1071,11 @@
         window.totalLeiturasGpsContador = 0;
         historicoCoordenadas = [];
         if (mapaObjeto && mapaObjeto.getSource('trajeto-linha')) {
-            mapaObjeto.getSource('trajeto-linha').setData({
-                'type': 'Feature',
-                'properties': {},
-                'geometry': { 'type': 'LineString', 'coordinates': [] }
-            });
+          mapaObjeto.getSource('trajeto-linha').setData({
+            'type': 'Feature',
+            'properties': {},
+            'geometry': { 'type': 'LineString', 'coordinates': [] }
+          });
         }
         localStorage.setItem('severino_distancia', '0');
         if (distVal) distVal.innerText = "0.00 km";
@@ -1100,18 +1100,18 @@
         telaMapa.style.display = 'flex';
         
         setTimeout(function() {
-            inicializarMapeamentoOriginal();
-            if (mapaObjeto) {
-                mapaObjeto.resize(); 
-                if (lastCoord) {
-                    mapaObjeto.jumpTo({
-                        center: [lastCoord.lon, lastCoord.lat],
-                        pitch: 60,
-                        bearing: rumoAtualVeiculo
-                    });
-                }
+          inicializarMapeamentoOriginal();
+          if (mapaObjeto) {
+            mapaObjeto.resize();
+            if (lastCoord) {
+              mapaObjeto.jumpTo({
+                center: [lastCoord.lon, lastCoord.lat],
+                pitch: 60,
+                bearing: rumoAtualVeiculo
+              });
             }
-        }, 200); 
+          }
+        }, 200);
       };
       
       window.fecharMapa = function() {
@@ -1201,7 +1201,7 @@
         const odoTextColor = light ? '#b37400' : '#f5a623';
         const speedTextColor = light ? '#007744' : '#00ff88';
         const infoBoxBg = light ? '#f8f9fa' : 'rgba(0,0,0,0.92)';
-
+        
         ctx.clearRect(0, 0, w, w_h);
         ctx.fillStyle = bgColor;
         ctx.beginPath();
