@@ -886,9 +886,10 @@
           mapaBloqueadoAoCarro = true;
           const btn = document.getElementById('btn-recentralizar');
           if (btn) btn.style.background = '#e0243f'; 
-          if (lastCoord && mapaObjeto) {
+          if (mapaObjeto) {
+              const centroDestino = lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614];
               mapaObjeto.flyTo({
-                  center: [lastCoord.lon, lastCoord.lat],
+                  center: centroDestino,
                   zoom: 17.5,
                   pitch: 55,
                   bearing: rumoAtualVeiculo,
