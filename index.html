@@ -862,25 +862,25 @@
         mapaObjeto.setStyle(estilo);
       }
       
-      window.recentralizarMapaManual = function() {
+    window.recentralizarMapaManual = function() {
           mapaBloqueadoAoCarro = true;
           const btn = document.getElementById('btn-recentralizar');
           if (btn) btn.style.background = '#e0243f'; 
           if (lastCoord && mapaObjeto) {
               mapaObjeto.flyTo({
                   center: [lastCoord.lon, lastCoord.lat],
-                  zoom: 17,
-                  pitch: 60,
+                  zoom: 17.5,
+                  pitch: 55,
                   bearing: rumoAtualVeiculo,
                   essential: true
               });
           }
       };
-
-      window.alternarCamadaMapa = function() {
+      
+    window.alternarCamadaMapa = function() {
           if (!mapaObjeto) return;
           if (mapaEmModoSatelite) {
-              atualizarEstiloMapa3D();
+              mapaObjeto.setStyle('https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json');
               document.getElementById('txt-btn-satelite').innerText = "Modo Satélite";
               mapaEmModoSatelite = false;
           } else {
