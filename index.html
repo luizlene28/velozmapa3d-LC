@@ -846,10 +846,28 @@
             });
         });
 
-        mapaObjeto.on('dragstart', function() {
+       mapaObjeto.on('dragstart', function() {
             mapaBloqueadoAoCarro = false;
             const btn = document.getElementById('btn-recentralizar');
             if (btn) btn.style.background = '#f5a623';
+        });
+
+        // Força a criação da seta na posição inicial para testes visuais
+        mapaObjeto.on('style.load', () => {
+            const posInicial = lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614];
+            if (!marcadorUsuario) {
+                const el = document.createElement('div');
+                el.className = 'marcador-navegacao';
+                el.innerHTML = '<div class="seta-waze-3d" id="seta-3d-id"></div>';
+                elementoSetaDom = el.querySelector('#seta-3d-id');
+                
+                marcadorUsuario = new maplibregl.Marker({ element: el, anchor: 'center' })
+                    .setLngLat(posInicial)
+                    .addTo(mapaObjeto);
+            }
+            if (elementoSetaDom) {
+                elementoSetaDom.style.transform = `rotate(${rumoAtualVeiculo}deg)`;
+            }
         });
       }
 
