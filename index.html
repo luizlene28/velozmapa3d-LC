@@ -823,9 +823,11 @@
         });
 
         mapaObjeto.on('load', () => {
-            if (mapaObjeto.getLayer('buildings')) {
-                mapaObjeto.setPaintProperty('buildings', 'fill-extrusion-height', ['get', 'render_height']);
-                mapaObjeto.setPaintProperty('buildings', 'fill-extrusion-base', ['get', 'render_min_height']);
+            // Ativa o volume 3D realista nas quadras e edifícios do estilo Voyager
+            if (mapaObjeto.getLayer('building_polygon')) {
+                mapaObjeto.setPaintProperty('building_polygon', 'fill-extrusion-height', 20);
+                mapaObjeto.setPaintProperty('building_polygon', 'fill-extrusion-color', '#e4e7eb');
+                mapaObjeto.setPaintProperty('building_polygon', 'fill-extrusion-opacity', 0.85);
             }
             
             mapaObjeto.addSource('trajeto-linha', {
