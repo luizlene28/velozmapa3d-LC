@@ -809,25 +809,23 @@
       generateSpeedTape(tapeTrackDigital);
       generateSpeedTape(tapeTrackAnalog);
       
-      // 🔥 FUNÇÃO DO MAPA CORRIGIDA (Ordem das Coordenadas e Estilo de Ruas Ativados)
       function inicializarMapeamentoOriginal() {
         if (mapaObjeto) return;
 
         mapaObjeto = new maplibregl.Map({
             container: 'mapa',
-            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', // Estilo colorido estável com ruas e texto
-            center: lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614], // [Longitude, Latitude] correta para o Brasil
-            zoom: 16.5,
-            pitch: 60, // Inclinação 3D estável
+            style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json', 
+            center: lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614], 
+            zoom: 17.5,
+            pitch: 55, 
             bearing: rumoAtualVeiculo,
             attributionControl: false
         });
 
         mapaObjeto.on('load', () => {
-            if (mapaObjeto.getLayer('building')) {
-                mapaObjeto.setPaintProperty('building', 'fill-extrusion-height', [
-                    'interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']
-                ]);
+            if (mapaObjeto.getLayer('buildings')) {
+                mapaObjeto.setPaintProperty('buildings', 'fill-extrusion-height', ['get', 'render_height']);
+                mapaObjeto.setPaintProperty('buildings', 'fill-extrusion-base', ['get', 'render_min_height']);
             }
             
             mapaObjeto.addSource('trajeto-linha', {
