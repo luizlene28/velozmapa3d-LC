@@ -822,30 +822,48 @@
             attributionControl: false
         });
 
-        mapaObjeto.on('load', () => {
-            // Ativa o volume 3D realista nas quadras e edifícios do estilo Voyager
-            if (mapaObjeto.getLayer('building_polygon')) {
-                mapaObjeto.setPaintProperty('building_polygon', 'fill-extrusion-height', 20);
-                mapaObjeto.setPaintProperty('building_polygon', 'fill-extrusion-color', '#e4e7eb');
-                mapaObjeto.setPaintProperty('building_polygon', 'fill-extrusion-opacity', 0.85);
+       // TRECHO MODIFICADO PARA OS PRÉDIOS 3D E SETA FUNCIONAREM JUNTOS
+        mapaObjeto.on('style.load', () => {
+            // 1. Injeta os dados vetoriais de construções caso o estilo mude para ruas
+            if (!mapaObjeto.getSource('openmaptiles')) {
+                mapaObjeto.addSource('openmaptiles', {
+                    type: 'vector',
+                    tiles: ['https://basemaps.cartocdn.com/gl/voyager-gl-style/tiles/{z}/{x}/{y}.png'] // Usa os blocos base do Carto
+                });
             }
-            
-            mapaObjeto.addSource('trajeto-linha', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'properties': {},
-                    'geometry': { 'type': 'LineString', 'coordinates': [] }
-                }
-            });
 
-            mapaObjeto.addLayer({
-                'id': 'trajeto-camada',
-                'type': 'line',
-                'source': 'trajeto-linha',
-                'layout': { 'line-join': 'round', 'line-cap': 'round' },
-                'paint': { 'line-color': '#00ff88', 'line-width': 6, 'line-opacity': 0.85 }
-            });
+            // 2. Garante a criação física dos Prédios em 3D erguidos do chão
+            if (!mapaObjeto.getLayer('predios-3d-realista')) {
+                mapaObjeto.addLayer({
+                    'id': 'predios-3d-realista',
+                    'source': 'openmaptiles',
+                    'source-layer': 'building',
+                    'type': 'fill-extrusion',
+                    'minzoom': 13,
+                    'paint': {
+                        'fill-extrusion-color': '#e4e7eb',
+                        'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 20],
+                        'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], ['get', 'min_height'], 0],
+                        'fill-extrusion-opacity': 0.85
+                    }
+                });
+            }
+
+            // 3. Mantém a seta Waze ativa e visível na tela
+            const posInicial = lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614];
+            if (!marcadorUsuario) {
+                const el = document.createElement('div');
+                el.className = 'marcador-navegacao';
+                el.innerHTML = '<div class="seta-waze-3d" id="seta-3d-id"></div>';
+                elementoSetaDom = el.querySelector('#seta-3d-id');
+                
+                marcadorUsuario = new maplibregl.Marker({ element: el, anchor: 'center' })
+                    .setLngLat(posInicial)
+                    .addTo(mapaObjeto);
+            }
+            if (elementoSetaDom) {
+                elementoSetaDom.style.transform = `rotate(${rumoAtualVeiculo}deg)`;
+            }
         });
 
        mapaObjeto.on('dragstart', function() {
