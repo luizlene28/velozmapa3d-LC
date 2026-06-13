@@ -809,52 +809,69 @@
       generateSpeedTape(tapeTrackDigital);
       generateSpeedTape(tapeTrackAnalog);
       
-      function inicializarMapeamentoOriginal() {
+     function inicializarMapeamentoOriginal() {
         if (mapaObjeto) return;
         
+        // Garante que o aplicativo comece no modo escuro para o 3D ficar bonito
+        if (window.isLightMode === undefined) window.isLightMode = false;
+
+        const estiloInicial = window.isLightMode ?
+          'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json' :
+          'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
         mapaObjeto = new maplibregl.Map({
           container: 'mapa',
-          style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+          style: estiloInicial,
           center: lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614],
           zoom: 17.5,
-          pitch: 65, // Inclinação ideal para ver os prédios erguidos
+          pitch: 65, // Inclinação do modo 3D
           bearing: rumoAtualVeiculo,
           attributionControl: false
         });
         
-        // Esta função abaixo reconstrói os prédios em 3D toda vez que o mapa mudar de estilo
-        function injetarPredios3DRealistas() {
-          // Se a fonte de dados do mapa não tiver os prédios, nós injetamos a fonte global estruturada
-          if (!mapaObjeto.getSource('dados-predios-3d')) {
-            mapaObjeto.addSource('dados-predios-3d', {
-              type: 'vector',
-              tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png']
-            });
-          }
+        // Função global que força o desenho dos prédios em 3D erguidos
+        window.injetarPredios3DRealistas = function() {
+          if (!mapaObjeto) return;
 
-          // Se a camada 3D não existir na tela, nós criamos e erguemos os blocos
+          // Se a camada 3D sumiu na troca de estilo, nós recriamos ela do zero
           if (!mapaObjeto.getLayer('camada-predios-3d-real')) {
             mapaObjeto.addLayer({
               'id': 'camada-predios-3d-real',
-              'source': 'carto', // Puxa os vetores nativos do servidor Carto
+              'source': 'carto', 
               'source-layer': 'building',
-              'type': 'fill-extrusion', // Transforma o desenho plano em bloco volumétrico
+              'type': 'fill-extrusion', 
               'minzoom': 14,
               'paint': {
-                'fill-extrusion-color': window.isLightMode ? '#e2e6eb' : '#2c2c3a',
-                'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 22],
+                'fill-extrusion-color': window.isLightMode ? '#e2e6eb' : '#343444',
+                'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 25],
                 'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], ['get', 'min_height'], 0],
-                'fill-extrusion-opacity': 0.85
+                'fill-extrusion-opacity': 0.9
               }
             });
           }
-        }
+        };
 
-        // Evento que roda na primeira carga do mapa
+        // O SEGREDO ESTÁ AQUI: Esse evento monitora qualquer mudança de estilo no mapa
+        mapaObjeto.on('styledata', () => {
+          // Se o usuário saiu do satélite e voltou pro modo rua (seja claro ou escuro)
+          if (!mapaEmModoSatelite) {
+            // Se a inclinação sumiu (ficou em 0 ou menor que 30), força voltar para 65 graus
+            if (mapaObjeto.getPitch() < 30) {
+              mapaObjeto.setPitch(65);
+            }
+            // Força a injeção dos prédios volumétricos
+            window.injetarPredios3DRealistas();
+          }
+        });
+
+        // Evento complementar padrão para carga inicial e marcadores
         mapaObjeto.on('style.load', () => {
-          injetarPredios3DRealistas();
+          if (!mapaEmModoSatelite) {
+            mapaObjeto.setPitch(65);
+            window.injetarPredios3DRealistas();
+          }
           
-          // Mantém a sua Seta do Waze funcionando perfeitamente
+          // Mantém a Seta do Waze funcionando no mapa
           const posInicial = lastCoord ? [lastCoord.lon, lastCoord.lat] : [-46.6565, -23.5614];
           if (!marcadorUsuario) {
             const el = document.createElement('div');
@@ -883,7 +900,7 @@
         if (mapaEmModoSatelite) return;
         
         const estilo = window.isLightMode ?
-          'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json' :
+          'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json' :
           'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
           
         mapaObjeto.setStyle(estilo);
